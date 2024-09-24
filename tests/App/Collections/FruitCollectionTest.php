@@ -27,7 +27,14 @@ class FruitCollectionTest extends TestCase
     public function testAddFruit()
     {
         $fruit = new Fruit();
+        $fruit->setId(1);
         
+        // Mock the repository to return null before adding and the fruit after adding
+        $this->fruitRepositoryMock->expects($this->exactly(2))
+            ->method('find')
+            ->with(1)
+            ->willReturnOnConsecutiveCalls(null, $fruit);
+
         $this->entityManagerMock->expects($this->once())
             ->method('persist')
             ->with($this->equalTo($fruit));
@@ -35,7 +42,13 @@ class FruitCollectionTest extends TestCase
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
 
+        // Assert that the fruit doesn't exist before adding
+        $this->assertNull($this->fruitCollection->findById(1));
+
         $this->fruitCollection->add($fruit);
+
+        // Assert that the fruit exists after adding
+        $this->assertSame($fruit, $this->fruitCollection->findById(1));
     }
 
     public function testAddInvalidItem()
@@ -49,6 +62,13 @@ class FruitCollectionTest extends TestCase
     public function testRemoveFruit()
     {
         $fruit = new Fruit();
+        $fruit->setId(1);
+    
+        // Mock findById to return the fruit before removal and null after removal
+        $this->fruitRepositoryMock->expects($this->exactly(2))
+            ->method('find')
+            ->with(1)
+            ->willReturnOnConsecutiveCalls($fruit, null);
         
         $this->entityManagerMock->expects($this->once())
             ->method('remove')
@@ -56,8 +76,14 @@ class FruitCollectionTest extends TestCase
         
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
-
+    
+        // Assert that the fruit exists before removal
+        $this->assertSame($fruit, $this->fruitCollection->findById(1));
+    
         $this->fruitCollection->remove($fruit);
+    
+        // Assert that the fruit can't be found after removal
+        $this->assertNull($this->fruitCollection->findById(1));
     }
 
     public function testRemoveInvalidItem()

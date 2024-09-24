@@ -27,6 +27,13 @@ class VegetableCollectionTest extends TestCase
     public function testAddVegetable()
     {
         $vegetable = new Vegetable();
+        $vegetable->setId(1);
+
+        // Mock the repository to return null before adding and the fruit after adding
+        $this->vegetableRepositoryMock->expects($this->exactly(2))
+            ->method('find')
+            ->with(1)
+            ->willReturnOnConsecutiveCalls(null, $vegetable);
         
         $this->entityManagerMock->expects($this->once())
             ->method('persist')
@@ -35,7 +42,13 @@ class VegetableCollectionTest extends TestCase
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
 
+        // Assert that the vegetable doesn't exist before adding
+        $this->assertNull($this->vegetableCollection->findById(1));
+
         $this->vegetableCollection->add($vegetable);
+
+        // Assert that the vegetable exists after adding
+        $this->assertSame($vegetable, $this->vegetableCollection->findById(1));
     }
 
     public function testAddInvalidItem()
@@ -49,7 +62,13 @@ class VegetableCollectionTest extends TestCase
     public function testRemoveVegetable()
     {
         $vegetable = new Vegetable();
+        $vegetable->setId(1);
         
+        $this->vegetableRepositoryMock->expects($this->exactly(2))
+        ->method('find')
+        ->with(1)
+        ->willReturnOnConsecutiveCalls($vegetable, null);
+
         $this->entityManagerMock->expects($this->once())
             ->method('remove')
             ->with($this->equalTo($vegetable));
@@ -57,7 +76,13 @@ class VegetableCollectionTest extends TestCase
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
 
+        // Assert that the vegetable exists before removal
+        $this->assertSame($vegetable, $this->vegetableCollection->findById(1));
+
         $this->vegetableCollection->remove($vegetable);
+
+        // Assert that the vegetable can't be found after removal
+        $this->assertNull($this->vegetableCollection->findById(1));
     }
 
     public function testRemoveInvalidItem()
