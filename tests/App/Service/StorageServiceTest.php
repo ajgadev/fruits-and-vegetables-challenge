@@ -13,9 +13,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 
 class StorageServiceTest extends TestCase
 {
-    /** @var FruitCollection|MockObject */
+    /** @var FruitCollection&MockObject */
     private $fruitCollectionMock;
-    /** @var VegetableCollection|MockObject */
+    /** @var VegetableCollection&MockObject */
     private $vegetableCollectionMock;
     private StorageService $storageService;
 
