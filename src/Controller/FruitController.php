@@ -41,11 +41,7 @@ class FruitController extends AbstractController
         $errors = $this->validationService->validate($foodPaginationDTO);
 
         if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
-            }
-            return new JsonResponse(['errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['errors' => $this->validationService->formatErrors($errors)], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         list($fruits, $totalItems) = $this->fruitCollection->list($name, $page, $limit, $unit);
@@ -68,18 +64,10 @@ class FruitController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        $foodDTO = new FoodCreateDTO();
-        $foodDTO->name = $data['name'] ?? null;
-        $foodDTO->quantity = $data['quantity'] ?? null;
-
+        $foodDTO = new FoodCreateDTO($data['name'] ?? '', $data['quantity'] ?? 0);
         $errors = $this->validationService->validate($foodDTO);
-
         if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
-            }
-            return new JsonResponse(['errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['errors' => $this->validationService->formatErrors($errors)], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $fruit = new Fruit();
@@ -96,12 +84,10 @@ class FruitController extends AbstractController
     {
         // Fetch the fruit entity by its ID
         $fruit = $this->fruitCollection->findById($id);
-
-        if ($fruit) {
-            $this->fruitCollection->remove($fruit);
-            return new JsonResponse(['status' => 'Fruit removed'], JsonResponse::HTTP_NO_CONTENT);
+        if (!$fruit) {
+            return new JsonResponse(['status' => 'Fruit not found'], JsonResponse::HTTP_NOT_FOUND);
         }
-
-        return new JsonResponse(['status' => 'Fruit not found'], JsonResponse::HTTP_NOT_FOUND);
+        $this->fruitCollection->remove($fruit);
+        return new JsonResponse(['status' => 'Fruit removed'], JsonResponse::HTTP_NO_CONTENT);
     }
 }

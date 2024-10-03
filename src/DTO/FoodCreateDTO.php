@@ -13,4 +13,10 @@ class FoodCreateDTO
     #[Assert\NotBlank(message: 'Quantity is required')]
     #[Assert\Type('numeric')]
     public $quantity;
+
+    public function __construct(string $name, float $quantity)
+    {
+        $this->name = $name;
+        $this->quantity = $quantity;
+    }
 }

@@ -18,4 +18,13 @@ class ValidationService
     {
         return $this->validator->validate($dto);
     }
+
+    public function formatErrors(ConstraintViolationListInterface $violations): array
+    {
+        $errors = [];
+        foreach ($violations as $violation) {
+            $errors[$violation->getPropertyPath()] = $violation->getMessage();
+        }
+        return $errors;
+    }
 }

@@ -17,7 +17,7 @@ class VegetableController extends AbstractController
 {
     private VegetableCollection $vegetableCollection;
     private ValidationService $validationService;
-    
+
     public function __construct(VegetableCollection $vegetableCollection, ValidationService $validationService)
     {
         $this->vegetableCollection = $vegetableCollection;
@@ -41,11 +41,7 @@ class VegetableController extends AbstractController
         $errors = $this->validationService->validate($foodPaginationDTO);
 
         if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
-            }
-            return new JsonResponse(['errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['errors' => $this->validationService->formatErrors($errors)], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         list($vegetables, $totalItems) = $this->vegetableCollection->list($name, $page, $limit, $unit);
@@ -69,18 +65,10 @@ class VegetableController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        $foodDTO = new FoodCreateDTO();
-        $foodDTO->name = $data['name'] ?? null;
-        $foodDTO->quantity = $data['quantity'] ?? null;
-
+        $foodDTO = new FoodCreateDTO($data['name'] ?? '', $data['quantity'] ?? 0);
         $errors = $this->validationService->validate($foodDTO);
-
         if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
-            }
-            return new JsonResponse(['errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['errors' => $this->validationService->formatErrors($errors)], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         $vegetable = new Vegetable();
@@ -98,11 +86,10 @@ class VegetableController extends AbstractController
         // Fetch the fruit entity by its ID
         $vegetable = $this->vegetableCollection->findById($id);
 
-        if ($vegetable) {
-            $this->vegetableCollection->remove($vegetable);
-            return new JsonResponse(['status' => 'Vegetable removed'], JsonResponse::HTTP_NO_CONTENT);
+        if (!$vegetable) {
+            return new JsonResponse(['status' => 'Vegetable not found'], JsonResponse::HTTP_NOT_FOUND);
         }
-
-        return new JsonResponse(['status' => 'Vegetable not found'], JsonResponse::HTTP_NOT_FOUND);
+        $this->vegetableCollection->remove($vegetable);
+        return new JsonResponse(['status' => 'Vegetable removed'], JsonResponse::HTTP_NO_CONTENT);
     }
 }
