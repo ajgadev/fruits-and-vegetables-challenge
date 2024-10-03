@@ -28,7 +28,7 @@ class FruitCollectionTest extends TestCase
     {
         $fruit = new Fruit();
         $fruit->setId(1);
-        
+
         // Mock the repository to return null before adding and the fruit after adding
         $this->fruitRepositoryMock->expects($this->exactly(2))
             ->method('find')
@@ -38,7 +38,7 @@ class FruitCollectionTest extends TestCase
         $this->entityManagerMock->expects($this->once())
             ->method('persist')
             ->with($this->equalTo($fruit));
-        
+
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
 
@@ -59,29 +59,36 @@ class FruitCollectionTest extends TestCase
         $this->fruitCollection->add(new \stdClass());
     }
 
+    // Edge case: Adding null
+    public function testAddNull()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->fruitCollection->add(null);
+    }
+
     public function testRemoveFruit()
     {
         $fruit = new Fruit();
         $fruit->setId(1);
-    
+
         // Mock findById to return the fruit before removal and null after removal
         $this->fruitRepositoryMock->expects($this->exactly(2))
             ->method('find')
             ->with(1)
             ->willReturnOnConsecutiveCalls($fruit, null);
-        
+
         $this->entityManagerMock->expects($this->once())
             ->method('remove')
             ->with($this->equalTo($fruit));
-        
+
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
-    
+
         // Assert that the fruit exists before removal
         $this->assertSame($fruit, $this->fruitCollection->findById(1));
-    
+
         $this->fruitCollection->remove($fruit);
-    
+
         // Assert that the fruit can't be found after removal
         $this->assertNull($this->fruitCollection->findById(1));
     }

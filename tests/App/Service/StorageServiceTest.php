@@ -11,6 +11,7 @@ use App\Service\StorageService;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
+use App\Exception\UnsupportedFoodTypeException;
 class StorageServiceTest extends TestCase
 {
     /** @var FruitCollection&MockObject */
@@ -67,6 +68,26 @@ class StorageServiceTest extends TestCase
             }));
 
         // Process the request
+        $this->storageService->processRequest();
+    }
+
+    public function testProcessRequestInvalidData()
+    {
+        $this->fruitCollectionMock
+            ->expects($this->never())
+            ->method('add');
+
+        $this->vegetableCollectionMock
+            ->expects($this->never())
+            ->method('add');
+
+        $invalidRequest = json_encode([
+            ['type' => 'unknown', 'name' => 'X', 'quantity' => 50],
+        ]);
+
+        $this->storageService->setRequest($invalidRequest);
+
+        $this->expectException(UnsupportedFoodTypeException::class);
         $this->storageService->processRequest();
     }
 }

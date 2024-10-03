@@ -34,11 +34,11 @@ class VegetableCollectionTest extends TestCase
             ->method('find')
             ->with(1)
             ->willReturnOnConsecutiveCalls(null, $vegetable);
-        
+
         $this->entityManagerMock->expects($this->once())
             ->method('persist')
             ->with($this->equalTo($vegetable));
-        
+
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
 
@@ -49,6 +49,13 @@ class VegetableCollectionTest extends TestCase
 
         // Assert that the vegetable exists after adding
         $this->assertSame($vegetable, $this->vegetableCollection->findById(1));
+    }
+
+    // Edge case: Adding null
+    public function testAddNull()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->vegetableCollection->add(null);
     }
 
     public function testAddInvalidItem()
@@ -63,16 +70,16 @@ class VegetableCollectionTest extends TestCase
     {
         $vegetable = new Vegetable();
         $vegetable->setId(1);
-        
+
         $this->vegetableRepositoryMock->expects($this->exactly(2))
-        ->method('find')
-        ->with(1)
-        ->willReturnOnConsecutiveCalls($vegetable, null);
+            ->method('find')
+            ->with(1)
+            ->willReturnOnConsecutiveCalls($vegetable, null);
 
         $this->entityManagerMock->expects($this->once())
             ->method('remove')
             ->with($this->equalTo($vegetable));
-        
+
         $this->entityManagerMock->expects($this->once())
             ->method('flush');
 

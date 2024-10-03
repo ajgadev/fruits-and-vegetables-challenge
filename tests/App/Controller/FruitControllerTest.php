@@ -120,4 +120,36 @@ class FruitControllerTest extends WebTestCase
         $listData = json_decode($client->getResponse()->getContent(), true);
         $this->assertFalse(array_search($fruitId, array_column($listData, 'id')));
     }
+
+    public function testAddFruitInvalidData()
+    {
+        $client = static::createClient();
+
+        $data = [
+            'name' => '',
+            'quantity' => -50
+        ];
+
+        $client->request(
+            'POST',
+            '/fruits',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($data)
+        );
+
+        $this->assertResponseStatusCodeSame(400);
+        $response = json_decode($client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('errors', $response);
+    }
+
+    public function testListInvalidUnit()
+    {
+        $client = static::createClient();
+        $client->request('GET', '/fruits?unit=invalid');
+        $this->assertResponseStatusCodeSame(400);
+        $response = json_decode($client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('errors', $response);
+    }
 }
