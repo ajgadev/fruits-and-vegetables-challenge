@@ -45,7 +45,6 @@ abstract class BaseCollection implements CollectionInterface
         // Separate query for counting total items (without pagination)
         $countQueryBuilder = clone $queryBuilder;
         $totalItems = $countQueryBuilder->select('COUNT(f.id)')
-                                        // ->resetDQLPart('orderBy')
                                         ->getQuery()
                                         ->getSingleScalarResult();
 

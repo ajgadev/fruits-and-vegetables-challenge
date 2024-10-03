@@ -6,6 +6,7 @@ use App\Entity\Fruit;
 use App\Repository\FruitRepository;
 use App\Service\Collections\FruitCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -22,6 +23,24 @@ class FruitCollectionTest extends TestCase
         $this->fruitRepositoryMock = $this->createMock(FruitRepository::class);
         $this->entityManagerMock = $this->createMock(EntityManagerInterface::class);
         $this->fruitCollection = new FruitCollection($this->fruitRepositoryMock, $this->entityManagerMock);
+
+        $queryBuilderMock = $this->getMockBuilder(QueryBuilder::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Mock the creation of the query builder
+        // $this->fruitRepositoryMock->method('createQueryBuilder')
+        //     ->willReturn($queryBuilderMock);
+
+        // // Mock the method chain on the QueryBuilder
+        // $queryMock = $this->createMock(\Doctrine\ORM\AbstractQuery::class);
+
+        // $queryMock->expects($this->any())
+        //     ->method('getResult')
+        //     ->willReturn([]); // Ensure this returns an array
+
+        // $queryBuilderMock->method('getQuery')
+        //     ->willReturn($queryMock);
     }
 
     public function testAddFruit()
