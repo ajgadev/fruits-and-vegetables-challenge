@@ -139,3 +139,14 @@ To run the tests:
 ```bash
 bin/phpunit
 ```
+
+## Feedback
+
+- Controller Overload: It seems that the controller is taking on too many responsibilities. However, I appreciate that you are trying to convert requests into DTOs (Data Transfer Objects). While a serializer would have been the ideal choice, you still demonstrate the concept of DTOs, which is a positive aspect for a junior level.
+- Migrations: I noticed that your migration files are creating the same tables. This approach could lead to issues, as it doesn’t function as intended.
+- Enum Class Usage: Instead of using an enum class, you've opted for a regular class that also performs other tasks, such as unit conversions. An enum class would have been a more suitable choice here.
+** I had an issue here with php versions. It was throwing an error when trying to use use enums. So I'm using a regular class instead. **
+- Duplicated Logic: There are two different controllers for vegetables and fruits, but both contain the same code. This duplicated logic could be optimized to improve maintainability.
+- Database Documentation: While you have added a PostgreSQL database, the README mentions that SQLite is being used. This leads to some confusion.
+HTTP Status Codes: You used return new JsonResponse(['status' => 'Vegetable removed'], JsonResponse::HTTP_NO_CONTENT);. The HTTP_NO_CONTENT status code should be used only when there is no content returned. In this case, there is content, so the status code is not fully compliant.
+- Reflection and Learning: It’s commendable that you documented your learnings and challenges in the README. This is very helpful for understanding your thought process and what you gained from the experience.
