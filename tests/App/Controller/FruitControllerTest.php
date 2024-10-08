@@ -113,7 +113,7 @@ class FruitControllerTest extends WebTestCase
 
         // Now test removing the fruit just added
         $client->request('DELETE', '/fruits/' . $fruitId);
-        $this->assertResponseStatusCodeSame(204);
+        $this->assertResponseStatusCodeSame(200);
 
         // Ensure the fruit is no longer present
         $client->request('GET', '/fruits');

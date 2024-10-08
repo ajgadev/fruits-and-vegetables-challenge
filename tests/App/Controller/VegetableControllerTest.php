@@ -113,7 +113,7 @@ class VegetableControllerTest extends WebTestCase
 
         // Now test removing the vegetable just added
         $client->request('DELETE', '/vegetables/' . $vegetableId);
-        $this->assertResponseStatusCodeSame(204);
+        $this->assertResponseStatusCodeSame(200);
 
         // Ensure the vegetable is no longer present
         $client->request('GET', '/vegetables');

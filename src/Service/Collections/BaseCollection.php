@@ -61,7 +61,9 @@ abstract class BaseCollection implements CollectionInterface
             }
             $item->setWeightUnit($unit);
         }
-        return [$results, $totalItems];
+
+        $totalPages = ceil($totalItems / $limit);
+        return [$results, $totalItems, $totalPages];
     }
 
 
@@ -97,7 +99,9 @@ abstract class BaseCollection implements CollectionInterface
             $item->setWeightUnit($unit);
         }
 
-        return [$results, $totalItems];
+        $totalPages = ceil($totalItems / $limit);
+
+        return [$results, $totalItems, $totalPages];
     }
 
     public function findById(int $id): ?object

@@ -5,23 +5,31 @@ namespace App\Controller;
 use App\Entity\Fruit;
 use App\DTO\FoodCreateDTO;
 use App\DTO\FoodPaginationDTO;
+use App\Entity\Food;
 use App\Service\ValidationService;
 use App\Service\Collections\FruitCollection;
+use App\Service\FoodService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Enum\WeightUnit;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class FruitController extends AbstractController
 {
     private FruitCollection $fruitCollection;
     private ValidationService $validationService;
+    private FoodService $foodService;
+    private SerializerInterface $serializer;
 
-    public function __construct(FruitCollection $fruitCollection, ValidationService $validationService)
+    public function __construct(FruitCollection $fruitCollection, ValidationService $validationService, FoodService $foodService, SerializerInterface $serializer)
     {
         $this->fruitCollection = $fruitCollection;
         $this->validationService = $validationService;
+        $this->foodService = $foodService;
+        $this->serializer = $serializer;
     }
 
     #[Route('/fruits', name: 'list_fruits', methods: ['GET'])]
@@ -32,11 +40,7 @@ class FruitController extends AbstractController
         $limit = $request->query->getInt('limit', 10);
         $unit = $request->query->get('unit', WeightUnit::GRAM);
 
-        $foodPaginationDTO = new FoodPaginationDTO();
-        $foodPaginationDTO->name = $name;
-        $foodPaginationDTO->page = $page;
-        $foodPaginationDTO->limit = $limit;
-        $foodPaginationDTO->unit = $unit;
+        $foodPaginationDTO = new FoodPaginationDTO($name, $page, $limit, $unit);
 
         $errors = $this->validationService->validate($foodPaginationDTO);
 
@@ -62,17 +66,13 @@ class FruitController extends AbstractController
     #[Route('/fruits', name: 'add_fruit', methods: ['POST'])]
     public function add(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-
-        $foodDTO = new FoodCreateDTO($data['name'] ?? '', $data['quantity'] ?? 0);
+        $foodDTO = $this->serializer->deserialize($request->getContent(), FoodCreateDTO::class, 'json');
         $errors = $this->validationService->validate($foodDTO);
         if (count($errors) > 0) {
             return new JsonResponse(['errors' => $this->validationService->formatErrors($errors)], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $fruit = new Fruit();
-        $fruit->setName($data['name']);
-        $fruit->setQuantity($data['quantity']);
+        $fruit = $this->foodService->createFood(Fruit::class, $foodDTO->getName(), $foodDTO->getQuantity());
 
         $this->fruitCollection->add($fruit);
 
@@ -88,6 +88,6 @@ class FruitController extends AbstractController
             return new JsonResponse(['status' => 'Fruit not found'], JsonResponse::HTTP_NOT_FOUND);
         }
         $this->fruitCollection->remove($fruit);
-        return new JsonResponse(['status' => 'Fruit removed'], JsonResponse::HTTP_NO_CONTENT);
+        return new JsonResponse(['message' => 'Fruit removed'], JsonResponse::HTTP_OK);
     }
 }

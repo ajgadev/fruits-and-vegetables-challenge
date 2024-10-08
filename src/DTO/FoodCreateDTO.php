@@ -19,4 +19,14 @@ class FoodCreateDTO
         $this->name = $name;
         $this->quantity = $quantity;
     }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getQuantity(): float
+    {
+        return $this->quantity;
+    }
 }

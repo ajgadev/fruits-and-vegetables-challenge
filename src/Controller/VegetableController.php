@@ -7,21 +7,28 @@ use App\DTO\FoodCreateDTO;
 use App\Service\ValidationService;
 use App\DTO\FoodPaginationDTO;
 use App\Service\Collections\VegetableCollection;
+use App\Service\FoodService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Enum\WeightUnit;
 
+use Symfony\Component\Serializer\SerializerInterface;
+
 class VegetableController extends AbstractController
 {
     private VegetableCollection $vegetableCollection;
     private ValidationService $validationService;
+    private FoodService $foodService;
+    private SerializerInterface $serializer;
 
-    public function __construct(VegetableCollection $vegetableCollection, ValidationService $validationService)
+    public function __construct(VegetableCollection $vegetableCollection, ValidationService $validationService, FoodService $foodService, SerializerInterface $serializer)
     {
         $this->vegetableCollection = $vegetableCollection;
         $this->validationService = $validationService;
+        $this->foodService = $foodService;
+        $this->serializer = $serializer;
     }
 
     #[Route('/vegetables', name: 'list_vegetables', methods: ['GET'])]
@@ -32,11 +39,7 @@ class VegetableController extends AbstractController
         $limit = $request->query->getInt('limit', 10);
         $unit = $request->query->get('unit', WeightUnit::GRAM);
 
-        $foodPaginationDTO = new FoodPaginationDTO();
-        $foodPaginationDTO->name = $name;
-        $foodPaginationDTO->page = $page;
-        $foodPaginationDTO->limit = $limit;
-        $foodPaginationDTO->unit = $unit;
+        $foodPaginationDTO = new FoodPaginationDTO($name, $page, $limit, $unit);
 
         $errors = $this->validationService->validate($foodPaginationDTO);
 
@@ -44,9 +47,7 @@ class VegetableController extends AbstractController
             return new JsonResponse(['errors' => $this->validationService->formatErrors($errors)], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        list($vegetables, $totalItems) = $this->vegetableCollection->list($name, $page, $limit, $unit);
-
-        $totalPages = ceil($totalItems / $limit);
+        list($vegetables, $totalItems, $totalPages) = $this->vegetableCollection->list($name, $page, $limit, $unit);
 
         return $this->json([
             'data' => $vegetables,
@@ -57,23 +58,20 @@ class VegetableController extends AbstractController
                 'items_per_page' => $limit,
             ],
         ]);
-        return $this->json($vegetables);
     }
 
     #[Route('/vegetables', name: 'add_vegetable', methods: ['POST'])]
     public function add(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        // Deserialize the request body into a DTO object
+        $foodDTO = $this->serializer->deserialize($request->getContent(), FoodCreateDTO::class, 'json');
 
-        $foodDTO = new FoodCreateDTO($data['name'] ?? '', $data['quantity'] ?? 0);
         $errors = $this->validationService->validate($foodDTO);
         if (count($errors) > 0) {
             return new JsonResponse(['errors' => $this->validationService->formatErrors($errors)], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $vegetable = new Vegetable();
-        $vegetable->setName($data['name']);
-        $vegetable->setQuantity($data['quantity']);
+        $vegetable = $this->foodService->createFood(Vegetable::class, $foodDTO->getName(), $foodDTO->getQuantity());
 
         $this->vegetableCollection->add($vegetable);
 
@@ -87,9 +85,9 @@ class VegetableController extends AbstractController
         $vegetable = $this->vegetableCollection->findById($id);
 
         if (!$vegetable) {
-            return new JsonResponse(['status' => 'Vegetable not found'], JsonResponse::HTTP_NOT_FOUND);
+            return new JsonResponse(['message' => 'Vegetable not found'], JsonResponse::HTTP_NOT_FOUND);
         }
         $this->vegetableCollection->remove($vegetable);
-        return new JsonResponse(['status' => 'Vegetable removed'], JsonResponse::HTTP_NO_CONTENT);
+        return new JsonResponse(['message' => 'Vegetable removed'], JsonResponse::HTTP_OK);
     }
 }
